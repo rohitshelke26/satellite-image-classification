@@ -2,7 +2,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import ALLOWED_ORIGINS
@@ -27,7 +27,13 @@ app.include_router(prediction.router, prefix="/api")
 @app.get("/api", include_in_schema=False)
 @app.get("/api/", include_in_schema=False)
 def api_root():
-    return RedirectResponse(url="/docs", status_code=307)
+    return {
+        "name": "TerraVision AI API",
+        "docs": "/docs",
+        "health": "/api/health",
+        "classes": "/api/classes",
+        "predict": "/api/predict",
+    }
 
 FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 if FRONTEND_DIST.is_dir():
@@ -35,6 +41,11 @@ if FRONTEND_DIST.is_dir():
 
     @app.get("/{full_path:path}", include_in_schema=False)
     def frontend(full_path: str):
+        if full_path == "api" or full_path.startswith("api/"):
+            return JSONResponse(
+                status_code=404,
+                content={"detail": "API route not found. See /docs for available endpoints."},
+            )
         requested_file = FRONTEND_DIST / full_path
         if full_path and requested_file.is_file():
             return FileResponse(requested_file)
