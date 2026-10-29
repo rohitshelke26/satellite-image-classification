@@ -35,8 +35,17 @@ def api_root():
         "predict": "/api/predict",
     }
 
-FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
-if FRONTEND_DIST.is_dir():
+def find_frontend_dist() -> Path | None:
+    repo_dir = Path(__file__).resolve().parents[2]
+    candidates = (
+        repo_dir / "frontend" / "dist",
+        Path.cwd() / "frontend" / "dist",
+    )
+    return next((candidate for candidate in candidates if (candidate / "index.html").is_file()), None)
+
+
+FRONTEND_DIST = find_frontend_dist()
+if FRONTEND_DIST is not None:
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
 
     @app.get("/{full_path:path}", include_in_schema=False)
