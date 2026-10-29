@@ -22,7 +22,7 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="The uploaded file is empty.")
 
     try:
-        return await asyncio.wait_for(asyncio.to_thread(service.predict, content), timeout=20)
+        return await asyncio.wait_for(asyncio.to_thread(service.predict, content), timeout=120)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except asyncio.TimeoutError as exc:
